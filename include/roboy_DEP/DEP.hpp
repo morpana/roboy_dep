@@ -7,7 +7,7 @@
 #include <roboy_DEP/DerMartiusController.h>
 #include <roboy_DEP/command.h>
 
-#define NUMBER_OF_MOTORS 9
+#define NUMBER_OF_MOTORS  9
 
 using namespace std;
 
@@ -19,6 +19,7 @@ class DEP {
 		void force();
 		void initialize();
 		void update();
+		int mode;
 	private:
 		void init();
 		void setMotorConfig();

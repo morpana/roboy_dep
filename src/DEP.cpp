@@ -1,7 +1,7 @@
 #include <roboy_DEP/DEP.hpp>
 
 DEP::DEP(){
-	
+	mode = 0;
 	// initialize ROS node
 	int argc = 0;
 	char **argv = NULL;
@@ -34,7 +34,7 @@ DEP::DEP(){
 	Kd=0;
 	forwardGain=0;
 	deadBand=0;
-	target_force=100;
+	target_force=20;
 	range=3;
 
 	//where to get polyPar?
@@ -79,6 +79,16 @@ void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPt
 
 void DEP::DepCommand(const roboy_DEP::command::ConstPtr &msg){
 	ROS_INFO("Command: %s", msg->command.c_str());
+	std::string force = "force";
+	std::string init = "init";
+	std::string update = "update";
+	if (msg->command.c_str() == force){
+		mode = 1;
+	} else if (msg->command.c_str() == init){
+		mode = 2;
+	} else if (msg->command.c_str() == update){
+		mode = 3;
+	}
 }
 
 void DEP::setMotorConfig(){
