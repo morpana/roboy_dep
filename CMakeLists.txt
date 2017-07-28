@@ -19,10 +19,18 @@ include_directories(
 # Catkin
 ##############################################################################
 
-# qt_build provides the qt cmake glue, roscpp the comms for a default talker
-find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communication_middleware cv_bridge tf tf_conversions
-        roboy_managing_node common_utilities interactive_markers)
-catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware common_utilities)
+
+find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communication_middleware cv_bridge tf tf_conversions roboy_managing_node common_utilities interactive_markers std_msgs message_generation)
+
+##########################
+## Declare ROS messages ##
+##########################
+
+add_message_files(FILES command.msg)
+generate_messages(DEPENDENCIES std_msgs)
+
+catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware common_utilities std_msgs message_runtime)
+
 include_directories(${catkin_INCLUDE_DIRS} ../common_utilities/include)
 
 ##############################################################################
@@ -38,21 +46,34 @@ SET(SOURCES
         src/stl_adds.cpp
 )
 
-##############################################################################
-# Binaries
-##############################################################################
+##########
+# Build ##
+##########
 
 add_executable(roboy_DEP ${SOURCES})
 add_dependencies(roboy_DEP roboy_communication_middleware_gencpp)
 target_link_libraries(roboy_DEP roboy_managing_node)
 
+add_executable(dep_interface src/dep_interface.cpp)
+add_dependencies(dep_interface roboy_DEP_generate_messsages_cpp)
+target_link_libraries(dep_interface ${catkin_LIBRARIES})
+
 ##############################################################################
 # Installation
 ##############################################################################
-install(TARGETS roboy_DEP
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+install(TARGETS 
+        roboy_DEP
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+install(TARGETS 
+        dep_interface
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 
 install(FILES
         package.xml
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-        )
+)

@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <roboy_DEP/matrix.h>
 #include <roboy_DEP/DerMartiusController.h>
+#include <roboy_DEP/command.h>
 
 #define NUMBER_OF_MOTORS 9
 
@@ -22,13 +23,14 @@ class DEP {
 		void init();
 		void setMotorConfig();
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+		void DepCommand(const roboy_DEP::command::ConstPtr &msg);
 
 		double scale_position(int motor_index, double value);
 		double scale_displacement(int motor_index, double value);
 		double getMuscleLengthScaledInv(int motor_index,double value);
 
 		ros::NodeHandlePtr nh;
-		ros::Subscriber motorStatus;
+		ros::Subscriber motorStatus, depCommand;
 		ros::Publisher motorConfig;
 		boost::shared_ptr<ros::AsyncSpinner> spinner;
 

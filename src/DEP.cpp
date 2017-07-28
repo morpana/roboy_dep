@@ -8,6 +8,7 @@ DEP::DEP(){
 	ros::init(argc, argv, "roboy_DEP");
 	nh = ros::NodeHandlePtr(new ros::NodeHandle);
 	motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &DEP::MotorStatus, this);
+	depCommand = nh->subscribe("/roboy_DEP/command", 1, &DEP::DepCommand, this);
 	motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
 	spinner->start();
@@ -68,13 +69,16 @@ void DEP::update(){
 }
 
 void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
-	ROS_INFO_THROTTLE(1,"the stuff has arrived");
+	ROS_INFO_THROTTLE(1,"DEP received motor status");
 	// get positions and displacements
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		//ROS_INFO("Position %i: %i", i, msg->position[i]);
 		positions.val(i,0) = scale_position(i,msg->position[i]);
 		displacements.val(i,0) = scale_displacement(i,msg->displacement[i]);
 	}
+}
+
+void DEP::DepCommand(const roboy_DEP::command::ConstPtr &msg){
+	ROS_INFO("Command: %s", msg->command.c_str());
 }
 
 void DEP::setMotorConfig(){
