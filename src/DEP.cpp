@@ -23,57 +23,81 @@ DEP::DEP(){
 
 	// initialize parameters
 	control_mode=0;
-	outputPosMax=1200;
-	outputNegMax=-1200;
-	spPosMax=1000;
-	spNegMax=-1000;
-	IntegralPosMax=4000;
-	IntegralNegMax=-4000;
-	Kp=3000;
+	outputPosMax=1000;
+	outputNegMax=-1000;
+	spPosMax=100000000;
+	spNegMax=-100000000;
+	IntegralPosMax=100;
+	IntegralNegMax=-100;
+	Kp=80;
 	Ki=0;
 	Kd=0;
 	forwardGain=0;
 	deadBand=0;
-	target_force=20;
-	range=3;
+	target_force=100;
+	range=5;
 
 	//where to get polyPar?
 }
 
-DEP::~DEP(){}
+DEP::~DEP(){
+	delete soctrl;
+}
 
 void DEP::force(){
 	control_mode = 2;
 	setMotorConfig();
+	std::lock_guard<std::mutex> lock(myoMaster->mux);
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		myoMaster->changeSetPoint(i, target_force);
 	}
 }
 
 void DEP::initialize(){
-	control_mode = 0;
-	setMotorConfig();
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		params[i][0] = positions.val(i,0);
+		params[i][0] = ENCODER_TO_RAD*positions.val(i,0);
 		params[i][1] = params[i][0]-range;
 		params[i][2] = params[i][0]+range;
 	}
+	std::lock_guard<std::mutex> lock(myoMaster->mux);
+	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+		myoMaster->changeSetPoint(i,positions.val(i,0));
+	}
+	control_mode = 0;
+	Kp = 1;
+	setMotorConfig();
 }
 
 void DEP::update(){
-	//ROS_INFO("update");
-	motorRefs = soctrl->update(positions,displacements);
+	ROS_INFO_THROTTLE(1,"update");
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0)));
+		// convert encoder ticks to radians, and then scale them
+		positions.val(i,0) = scale_position(i, ENCODER_TO_RAD*positions.val(i,0));
+		displacements.val(i,0) = scale_displacement(i, displacements.val(i,0));
 	}
+	printArray(positions);
+	printArray(displacements);
+	motorRefs = soctrl->update(positions,displacements);
+	std::lock_guard<std::mutex> lock(myoMaster->mux);
+	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+		myoMaster->changeSetPoint(i, 1/ENCODER_TO_RAD*getMuscleLengthScaledInv(i, motorRefs.val(i,0)));
+	}
+}
+
+void DEP::printArray(const matrix::Matrix& array){
+	std::string s;
+	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+		s.append(boost::lexical_cast<std::string>(array.val(i,0))+",");
+	}
+	ROS_INFO_THROTTLE(1,"%s", s.c_str());
 }
 
 void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
 	ROS_INFO_THROTTLE(1,"DEP received motor status");
 	// get positions and displacements
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		positions.val(i,0) = scale_position(i,msg->position[i]);
-		displacements.val(i,0) = scale_displacement(i,msg->displacement[i]);
+		positions.val(i,0) = msg->position[i];
+		displacements.val(i,0) = msg->displacement[i];
 	}
 }
 

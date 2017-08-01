@@ -7,7 +7,8 @@
 #include <roboy_DEP/DerMartiusController.h>
 #include <roboy_DEP/command.h>
 
-#define NUMBER_OF_MOTORS  9
+#define NUMBER_OF_MOTORS  14
+#define ENCODER_TO_RAD 2*3.14159/(2000.0*53.0)
 
 using namespace std;
 
@@ -25,6 +26,8 @@ class DEP {
 		void setMotorConfig();
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 		void DepCommand(const roboy_DEP::command::ConstPtr &msg);
+
+		void printArray(const matrix::Matrix& array);
 
 		double scale_position(int motor_index, double value);
 		double scale_displacement(int motor_index, double value);
