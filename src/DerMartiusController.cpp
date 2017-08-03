@@ -19,6 +19,7 @@
 
 #include "roboy_DEP/DerMartiusController.h"
 #include "roboy_DEP/inspectable.h"
+#include <roboy_DEP/DEP.hpp>
 
 using namespace matrix;
 using namespace std;
@@ -165,6 +166,7 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
 
   forces      = (force_values + (-pretension))*(1/maxForce);
   x_raw_buffer[t] = sensor_values  + forces*springMult1;
+
   if(useDelay)
     xCurrent = x_raw_buffer[t].above(x_raw_buffer[t-delay]);
   else
@@ -238,7 +240,6 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
     }
   t++;
   stepNo=t;
-
   return y_buffer[0];
 }
 

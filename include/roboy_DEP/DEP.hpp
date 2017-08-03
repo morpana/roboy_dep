@@ -8,7 +8,7 @@
 #include <roboy_DEP/command.h>
 
 #define NUMBER_OF_MOTORS  14
-#define ENCODER_TO_RAD 2*3.14159/(2000.0*53.0)
+//#define ENCODER_TO_RAD 2.0*3.14159/(2000.0*53.0)
 
 using namespace std;
 
@@ -41,6 +41,7 @@ class DEP {
 		DerMartiusController* soctrl;
 		matrix::Matrix positions, displacements, motorRefs;
 
+		double encoder_to_rad;
 		double params[NUMBER_OF_MOTORS][3];
 		double polyPar[NUMBER_OF_MOTORS][4];
 		int control_mode, outputPosMax, outputNegMax, spPosMax, spNegMax, IntegralPosMax, IntegralNegMax, Kp, Ki, Kd, forwardGain, deadBand;
@@ -48,3 +49,7 @@ class DEP {
 };
 
 #endif // _DEP
+
+//sudo kill -9 $(ps -al|grep '\(roboy_DEP\|dep_interface\)'|awk '{print $4;}'|tr '\n' ' ')
+//fpga spi lights
+// sounds dont qworry

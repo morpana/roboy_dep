@@ -34,15 +34,15 @@ DEP::DEP(){
 	Kd=0;
 	forwardGain=0;
 	deadBand=0;
-	target_force=100;
+	target_force=20;
 	range=5;
+
+	encoder_to_rad = 2.0*3.14159/(2000.0*53.0);
 
 	//where to get polyPar?
 }
 
-DEP::~DEP(){
-	delete soctrl;
-}
+DEP::~DEP(){}
 
 void DEP::force(){
 	control_mode = 2;
@@ -54,11 +54,17 @@ void DEP::force(){
 }
 
 void DEP::initialize(){
+	//matrix::Matrix m = matrix::Matrix(NUMBER_OF_MOTORS,1);
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		params[i][0] = ENCODER_TO_RAD*positions.val(i,0);
+		params[i][0] = positions.val(i,0)*encoder_to_rad;
+		//m.val(i,0) = encoder_to_rad*positions.val(i,0);
 		params[i][1] = params[i][0]-range;
 		params[i][2] = params[i][0]+range;
 	}
+	/*for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+		m.val(i,0) = scale_position(i, encoder_to_rad*positions.val(i,0));
+	}*/
+	//printArray(m);
 	std::lock_guard<std::mutex> lock(myoMaster->mux);
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		myoMaster->changeSetPoint(i,positions.val(i,0));
@@ -72,16 +78,29 @@ void DEP::update(){
 	ROS_INFO_THROTTLE(1,"update");
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		// convert encoder ticks to radians, and then scale them
-		positions.val(i,0) = scale_position(i, ENCODER_TO_RAD*positions.val(i,0));
+		positions.val(i,0) = scale_position(i, positions.val(i,0)*encoder_to_rad);
 		displacements.val(i,0) = scale_displacement(i, displacements.val(i,0));
 	}
-	printArray(positions);
-	printArray(displacements);
+	//ROS_INF0("pos and disp: ");
+	//printArray(positions);
+	//printArray(displacements);
 	motorRefs = soctrl->update(positions,displacements);
 	std::lock_guard<std::mutex> lock(myoMaster->mux);
+	matrix::Matrix m = matrix::Matrix(NUMBER_OF_MOTORS,1);
+	//matrix::Matrix m1 = matrix::Matrix(NUMBER_OF_MOTORS,1);
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		myoMaster->changeSetPoint(i, 1/ENCODER_TO_RAD*getMuscleLengthScaledInv(i, motorRefs.val(i,0)));
+		myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))*(1/encoder_to_rad));
+		//myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0)));
+		//myoMaster->changeSetPoint(i, 3000);
+		//if (i == 2){
+		//	myoMaster->changeSetPoint(1,(1/encoder_to_rad)*1);
+		//}
+		//m.val(i,0) = motorRefs.val(i,0);
+		m.val(i,0) = getMuscleLengthScaledInv(i, motorRefs.val(i,0))*(1/encoder_to_rad);
 	}
+	//ROS_INF0_THROTTLE(1, "motorRefs: ");
+	//printArray(m1);
+	printArray(m);
 }
 
 void DEP::printArray(const matrix::Matrix& array){
@@ -89,7 +108,7 @@ void DEP::printArray(const matrix::Matrix& array){
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		s.append(boost::lexical_cast<std::string>(array.val(i,0))+",");
 	}
-	ROS_INFO_THROTTLE(1,"%s", s.c_str());
+	ROS_INFO("%s", s.c_str());
 }
 
 void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
@@ -97,6 +116,7 @@ void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPt
 	// get positions and displacements
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		positions.val(i,0) = msg->position[i];
+		//printArray(positions);
 		displacements.val(i,0) = msg->displacement[i];
 	}
 }
@@ -142,8 +162,11 @@ double DEP::scale_position(int motor_index, double value){
 }
 
 double DEP::scale_displacement(int motor_index, double value){
-	return value;
+	//return value;
+	return value*0.237536 + value*value*0.000032;
 	//return polyPar[motor_index][0] + value*polyPar[motor_index][1] + value*value*polyPar[motor_index][2] + value*value*value*polyPar[motor_index][3];
+	//soft spring
+	//remember relative encoders -> initialization procedure
 }
 
 double DEP::getMuscleLengthScaledInv(int motor_index,double value){
