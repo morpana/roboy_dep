@@ -3,7 +3,7 @@
 ##############################################################################
 
 cmake_minimum_required(VERSION 2.8.0)
-project(roboy_DEP)
+project(roboy_dep)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/../roboy_managing_node/cmake)
@@ -50,19 +50,19 @@ SET(SOURCES
 # Build ##
 ##########
 
-add_executable(roboy_DEP ${SOURCES})
-add_dependencies(roboy_DEP roboy_communication_middleware_gencpp)
-target_link_libraries(roboy_DEP roboy_managing_node)
+add_executable(roboy_dep ${SOURCES})
+add_dependencies(roboy_dep roboy_communication_middleware_gencpp)
+target_link_libraries(roboy_dep roboy_managing_node)
 
 add_executable(dep_interface src/dep_interface.cpp)
-add_dependencies(dep_interface roboy_DEP_generate_messsages_cpp)
+add_dependencies(dep_interface ${catkin_EXPORTED_TARGETS} roboy_dep_generate_messsages_cpp)
 target_link_libraries(dep_interface ${catkin_LIBRARIES})
 
 ##############################################################################
 # Installation
 ##############################################################################
 install(TARGETS 
-        roboy_DEP
+        roboy_dep
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
