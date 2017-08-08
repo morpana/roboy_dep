@@ -9,6 +9,7 @@ DEP::DEP(){
 	nh = ros::NodeHandlePtr(new ros::NodeHandle);
 	motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &DEP::MotorStatus, this);
 	depCommand = nh->subscribe("/roboy_dep/command", 1, &DEP::DepCommand, this);
+	depParameters = nh->subscribe("/roboy_dep/depParameters", 1, &DEP::DepParameters, this);
 	motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
 	spinner->start();
@@ -153,6 +154,27 @@ void DEP::setMotorConfig(){
 		msg.deadBand.push_back(deadBand);
 	}
 	motorConfig.publish(msg);
+}
+
+
+void DEP::DepParameters(const roboy_dep::depParameters::ConstPtr &msg){
+	ROS_INFO("Set DEP parameters");
+	soctrl->timedist = msg->timedist;
+	soctrl->urate = msg->urate;
+	soctrl->initFeedbackStrength = msg->initFeedbackStrength;
+	soctrl->regularization = msg->regularization;
+	soctrl->synboost = msg->synboost;
+	soctrl->maxSpeed = msg->maxSpeed;
+	soctrl->epsh = msg->epsh;
+	soctrl->pretension = msg->pretension;
+	soctrl->maxForce = msg->maxForce;
+	soctrl->springMult1 = msg->springMult1;
+	soctrl->delay = msg->delay;
+	soctrl->guideType = msg->guideType;
+	soctrl->guideIdx = msg->guideIdx;
+	soctrl->guideAmpl = msg->guideAmpl;
+	soctrl->guideFreq = msg->guideFreq;
+	ROS_INFO("timedist: %i", soctrl->timedist);
 }
 
 double DEP::scale_position(int motor_index, double value){

@@ -1,0 +1,15 @@
+int32 timedist
+float64 urate
+float64 initFeedbackStrength
+int32 regularization
+float64 synboost
+float64 maxSpeed
+float64 epsh
+float64 pretension
+float64 maxForce
+float64 springMult1
+int32 delay
+int32 guideType
+int32 guideIdx
+float64 guideAmpl
+float64 guideFreq

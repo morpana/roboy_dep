@@ -6,6 +6,7 @@
 #include <roboy_dep/matrix.h>
 #include <roboy_dep/DerMartiusController.h>
 #include <roboy_dep/command.h>
+#include <roboy_dep/depParameters.h>
 
 #define NUMBER_OF_MOTORS  14
 //#define ENCODER_TO_RAD 2.0*3.14159/(2000.0*53.0)
@@ -26,6 +27,7 @@ class DEP {
 		void setMotorConfig();
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 		void DepCommand(const roboy_dep::command::ConstPtr &msg);
+		void DepParameters(const roboy_dep::depParameters::ConstPtr &msg);
 
 		void printArray(const matrix::Matrix& array);
 
@@ -34,7 +36,7 @@ class DEP {
 		double getMuscleLengthScaledInv(int motor_index,double value);
 
 		ros::NodeHandlePtr nh;
-		ros::Subscriber motorStatus, depCommand;
+		ros::Subscriber motorStatus, depCommand, depParameters;
 		ros::Publisher motorConfig;
 		boost::shared_ptr<ros::AsyncSpinner> spinner;
 
