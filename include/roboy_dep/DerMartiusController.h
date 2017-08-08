@@ -19,9 +19,9 @@
 #ifndef RALFDERCONTROLLER_H_
 #define RALFDERCONTROLLER_H_
 
-#include "roboy_DEP/matrix.h"
-#include "roboy_DEP/ringbuffer.h"
-#include "roboy_DEP/inspectable.h"
+#include "roboy_dep/matrix.h"
+#include "roboy_dep/ringbuffer.h"
+#include "roboy_dep/inspectable.h"
 
 #include <cmath>
 

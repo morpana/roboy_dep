@@ -8,7 +8,7 @@
 //
 /***************************************************************************/
 
-#include "roboy_DEP/matrix.h"
+#include "roboy_dep/matrix.h"
 #include <string.h>
 #include <cmath>
 #include <algorithm>

@@ -1,14 +1,14 @@
-#include <roboy_DEP/DEP.hpp>
+#include <roboy_dep/DEP.hpp>
 
 DEP::DEP(){
 	mode = 0;
 	// initialize ROS node
 	int argc = 0;
 	char **argv = NULL;
-	ros::init(argc, argv, "roboy_DEP");
+	ros::init(argc, argv, "roboy_dep");
 	nh = ros::NodeHandlePtr(new ros::NodeHandle);
 	motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &DEP::MotorStatus, this);
-	depCommand = nh->subscribe("/roboy_DEP/command", 1, &DEP::DepCommand, this);
+	depCommand = nh->subscribe("/roboy_dep/command", 1, &DEP::DepCommand, this);
 	motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
 	spinner->start();
@@ -121,7 +121,7 @@ void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPt
 	}
 }
 
-void DEP::DepCommand(const roboy_DEP::command::ConstPtr &msg){
+void DEP::DepCommand(const roboy_dep::command::ConstPtr &msg){
 	ROS_INFO("Command: %s", msg->command.c_str());
 	std::string force = "force";
 	std::string init = "init";

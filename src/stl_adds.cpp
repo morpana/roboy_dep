@@ -23,7 +23,7 @@
  ***************************************************************************/
 
 #include <stdio.h>
-#include "roboy_DEP/stl_adds.h"
+#include "roboy_dep/stl_adds.h"
 
 namespace std {
 

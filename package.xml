@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>roboy_DEP</name>
+  <name>roboy_dep</name>
   <version>0.1.0</version>
   <description>DEP</description>
   <maintainer email="orpana.markus@gmail.com">Markus Orpana</maintainer>

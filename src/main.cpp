@@ -1,4 +1,4 @@
-#include <roboy_DEP/DEP.hpp>
+#include <roboy_dep/DEP.hpp>
 
 #define UPDATE_RATE 20000	//20 ms
 

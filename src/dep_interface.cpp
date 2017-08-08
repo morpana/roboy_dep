@@ -3,13 +3,13 @@
 // to modify the behavior or parameters of the DEP node
 
 #include "ros/ros.h"
-#include "roboy_DEP/command.h"
+#include "roboy_dep/command.h"
 
 using namespace std;
 int main(int argc, char **argv){
 	ros::init(argc, argv, "dep_interface");
 	ros::NodeHandle n;
-	ros::Publisher pub = n.advertise<roboy_DEP::command>("/roboy_DEP/command", 1);
+	ros::Publisher pub = n.advertise<roboy_dep::command>("/roboy_dep/command", 1);
 	ros::Rate loop_rate(10);
 
 	std::string force = "force";
@@ -18,7 +18,7 @@ int main(int argc, char **argv){
 
 	int mode = 0;
 	while (ros::ok()){
-		roboy_DEP::command msg;
+		roboy_dep::command msg;
 		if (mode == 0){
 			ROS_INFO("Enter \"force\" to initialize force mode");
 			cout << "Waiting for user input: " << endl;

@@ -17,9 +17,9 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "roboy_DEP/DerMartiusController.h"
-#include "roboy_DEP/inspectable.h"
-#include <roboy_DEP/DEP.hpp>
+#include "roboy_dep/DerMartiusController.h"
+#include "roboy_dep/inspectable.h"
+#include <roboy_dep/DEP.hpp>
 
 using namespace matrix;
 using namespace std;

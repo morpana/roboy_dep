@@ -3,9 +3,9 @@
 
 #include <roboy_managing_node/myoMaster.hpp>
 #include <ros/ros.h>
-#include <roboy_DEP/matrix.h>
-#include <roboy_DEP/DerMartiusController.h>
-#include <roboy_DEP/command.h>
+#include <roboy_dep/matrix.h>
+#include <roboy_dep/DerMartiusController.h>
+#include <roboy_dep/command.h>
 
 #define NUMBER_OF_MOTORS  14
 //#define ENCODER_TO_RAD 2.0*3.14159/(2000.0*53.0)
@@ -25,7 +25,7 @@ class DEP {
 		void init();
 		void setMotorConfig();
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
-		void DepCommand(const roboy_DEP::command::ConstPtr &msg);
+		void DepCommand(const roboy_dep::command::ConstPtr &msg);
 
 		void printArray(const matrix::Matrix& array);
 
@@ -50,6 +50,6 @@ class DEP {
 
 #endif // _DEP
 
-//sudo kill -9 $(ps -al|grep '\(roboy_DEP\|dep_interface\)'|awk '{print $4;}'|tr '\n' ' ')
+//sudo kill -9 $(ps -al|grep '\(roboy_dep\|dep_interface\)'|awk '{print $4;}'|tr '\n' ' ')
 //fpga spi lights
 // sounds dont qworry

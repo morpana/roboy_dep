@@ -29,8 +29,8 @@
 #include <map>
 #include <utility>
 #include <string>
-#include "roboy_DEP/stl_adds.h"
-#include "roboy_DEP/matrix.h"
+#include "roboy_dep/stl_adds.h"
+#include "roboy_dep/matrix.h"
 
 #include <iostream>
 

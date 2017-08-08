@@ -21,8 +21,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  *                                                                         *
  ***************************************************************************/
-#include "roboy_DEP/inspectable.h"
-#include "roboy_DEP/stl_adds.h"
+#include "roboy_dep/inspectable.h"
+#include "roboy_dep/stl_adds.h"
 #include <cstdio>
 
 using namespace std;
