@@ -68,6 +68,8 @@ public:
   double guideAmpl; // param for guidance
   double guideFreq; // param for guidance
 
+  bool learning; //enable/disable learning update
+
   void setInvDelayCoupling(bool);
   bool getInvDelayCoupling() { return invDelayCoupling; }
 
@@ -84,6 +86,7 @@ public:
   bool restore(FILE* f);
   bool storeToFile(const char* filename) const;
   bool restoreFromFile(const char* filename);
+  matrix::Matrix getC();
 };
 
 #endif

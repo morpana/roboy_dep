@@ -26,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communicat
 ## Declare ROS messages ##
 ##########################
 
-add_message_files(FILES command.msg depParameters.msg)
+add_message_files(FILES command.msg depParameters.msg cArray.msg depMatrix.msg)
 generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware common_utilities std_msgs message_runtime)

@@ -53,6 +53,7 @@ DerMartiusController::DerMartiusController(unsigned int number_mot,unsigned int 
   guideIdx    = 0;
   guideAmpl   = 0.3;
   guideFreq   = 0.5;
+  learning = true;
 
   useDelay    = useDelaySensors;
   number_motors = number_mot;
@@ -182,26 +183,31 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
       //        cout << "b.m: " << x_buffer[t].getM() << "\n";
       Matrix mu = M * (x_buffer[t] - x_buffer[t-diff]);
       Matrix v =  x_buffer[t - timedist] -  x_buffer[t - timedist - diff];//default: timedist = 2 - 16
-      // Learning step:
-      double reg = pow(10.0f,-regularization);
 
-      Matrix updateC =    mu * (v^T)* (1/(v.norm_sqr()+reg)); // normalized update
+      //toggle learning
+      if (learning == true){
+          // Learning step:
+		      double reg = pow(10.0f,-regularization);
 
-      if ( t > 10)
-        {
-          C_update += ((updateC   -  C_update)*urate).mapP(1,clip); //urate is  one over tau. default: urate=.02;
-        }
+		      Matrix updateC =    mu * (v^T)* (1/(v.norm_sqr()+reg)); // normalized update
 
-      CC = C_update;
+		      if ( t > 10)
+		        {
+		          C_update += ((updateC   -  C_update)*urate).mapP(1,clip); //urate is  one over tau. default: urate=.02;
+		        }
 
-      ///////////////Begin neuron individual normalization:
-      for (int i=0; i<number_motors; i++) {
-        double normi = sqrt(CC.row(i).norm_sqr()); // norm of one row
-        normmot.val(i,0) = .3/( normi + reg); // Georg disabled
+		      CC = C_update;
+
+		      ///////////////Begin neuron individual normalization:
+		      for (int i=0; i<number_motors; i++) {
+		        double normi = sqrt(CC.row(i).norm_sqr()); // norm of one row
+		        normmot.val(i,0) = .3/( normi + reg); // Georg disabled
+		      }
+		      CC = CC.multrowwise(normmot)*synboost;
+		      // synboost  corresponds to the gain factor kappa.
+		      ///////////////End neuron individual normalization
       }
-      CC = CC.multrowwise(normmot)*synboost;
-      // synboost  corresponds to the gain factor kappa.
-      ///////////////End neuron individual normalization
+
       if(splitBrain){ // C matrix is set to scaled unit matrix (ignore the learning above)
         CC=(CC^0)*synboost;
       }
@@ -298,3 +304,7 @@ bool DerMartiusController::restoreFromFile(const char* filename) {
 }
 
 ///////////////// End of Controller ////////
+
+matrix::Matrix DerMartiusController::getC(){
+	return CC;
+}

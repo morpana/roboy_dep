@@ -13,3 +13,6 @@ int32 guideType
 int32 guideIdx
 float64 guideAmpl
 float64 guideFreq
+bool learning
+int32 targetForce
+int32 range
