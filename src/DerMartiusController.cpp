@@ -308,3 +308,7 @@ bool DerMartiusController::restoreFromFile(const char* filename) {
 matrix::Matrix DerMartiusController::getC(){
 	return CC;
 }
+
+void DerMartiusController::setC(matrix::Matrix C){
+  CC = C;
+}

@@ -87,6 +87,7 @@ public:
   bool storeToFile(const char* filename) const;
   bool restoreFromFile(const char* filename);
   matrix::Matrix getC();
+  void setC(matrix::Matrix C);
 };
 
 #endif

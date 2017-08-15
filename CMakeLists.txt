@@ -55,7 +55,7 @@ add_dependencies(roboy_dep roboy_communication_middleware_gencpp)
 target_link_libraries(roboy_dep roboy_managing_node)
 
 add_executable(dep_interface src/dep_interface.cpp)
-add_dependencies(dep_interface ${catkin_EXPORTED_TARGETS} roboy_dep_generate_messsages_cpp)
+add_dependencies(dep_interface ${catkin_EXPORTED_TARGETS} roboy_dep roboy_dep_generate_messsages_cpp)
 target_link_libraries(dep_interface ${catkin_LIBRARIES})
 
 ##############################################################################

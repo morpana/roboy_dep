@@ -30,6 +30,7 @@ class DEP {
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 		void DepCommand(const roboy_dep::command::ConstPtr &msg);
 		void DepParameters(const roboy_dep::depParameters::ConstPtr &msg);
+		void DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg);
 
 		void printMatrix(const matrix::Matrix& array);
 
@@ -38,12 +39,12 @@ class DEP {
 		double getMuscleLengthScaledInv(int motor_index,double value);
 
 		ros::NodeHandlePtr nh;
-		ros::Subscriber motorStatus, depCommand, depParameters;
+		ros::Subscriber motorStatus, depCommand, depParameters, depLoadMatrix;
 		ros::Publisher motorConfig, DepMatrix;
 		boost::shared_ptr<ros::AsyncSpinner> spinner;
 
 		DerMartiusController* soctrl;
-		matrix::Matrix positions, displacements, motorRefs;
+		matrix::Matrix positions, displacements, motorRefs, C;
 
 		double encoder_to_rad;
 		double params[NUMBER_OF_MOTORS][3];
@@ -54,6 +55,6 @@ class DEP {
 
 #endif // _DEP
 
-//sudo kill -9 $(ps -al|grep '\(roboy_dep\|dep_interface\)'|awk '{print $4;}'|tr '\n' ' ')
+//sudo kill -9 $(ps -al|grep '\(roboy_dep\|dep_interface\|dep_gui\)'|awk '{print $4;}'|tr '\n' ' ')
 //fpga spi lights
 // sounds dont qworry

@@ -10,6 +10,7 @@ DEP::DEP(){
 	motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &DEP::MotorStatus, this);
 	depCommand = nh->subscribe("/roboy_dep/command", 1, &DEP::DepCommand, this);
 	depParameters = nh->subscribe("/roboy_dep/depParameters", 1, &DEP::DepParameters, this);
+	depLoadMatrix = nh->subscribe("/roboy_dep/depLoadMatrix", 1, &DEP::DepLoadMatrix, this);
 	motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
 	DepMatrix = nh->advertise<roboy_dep::depMatrix>("/roboy_dep/depMatrix", 1);
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
@@ -25,6 +26,18 @@ DEP::DEP(){
 }
 
 DEP::~DEP(){}
+
+void DEP::DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg){
+	ROS_INFO("Received matrix");
+	matrix::Matrix C = matrix::Matrix(msg->size, msg->depMatrix[0].size);
+	// assign the data from the depMatrix
+	for (int i = 0; i < msg->size; i++) {
+		for (int j = 0; j < msg->depMatrix[i].size; j++) {
+			C.val(i,j) = msg->depMatrix[i].cArray[j];
+		}
+	}
+	soctrl->setC(C);
+}
 
 void DEP::init_params(){
 	// initialize parameters
@@ -154,6 +167,8 @@ void DEP::DepCommand(const roboy_dep::command::ConstPtr &msg){
 		mode = 2;
 	} else if (msg->command.c_str() == update){
 		mode = 3;
+		Kp = 80;
+		setMotorConfig();
 	}
 }
 
