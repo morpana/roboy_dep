@@ -31,6 +31,7 @@ class DEP {
 		void DepCommand(const roboy_dep::command::ConstPtr &msg);
 		void DepParameters(const roboy_dep::depParameters::ConstPtr &msg);
 		void DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg);
+		void pubDepMatrix();
 
 		void printMatrix(const matrix::Matrix& array);
 
@@ -56,5 +57,6 @@ class DEP {
 #endif // _DEP
 
 //sudo kill -9 $(ps -al|grep '\(roboy_dep\|dep_interface\|dep_gui\)'|awk '{print $4;}'|tr '\n' ' ')
+//sudo killall -9 rosmaster (if roscore not closing)
 //fpga spi lights
 // sounds dont qworry

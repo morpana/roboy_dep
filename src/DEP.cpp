@@ -117,7 +117,10 @@ void DEP::update(){
 	//ROS_INF0_THROTTLE(1, "motorRefs: ");
 	//printMatrix(m1);
 	//printMatrix(m);
+	pubDepMatrix();
+}
 
+void DEP::pubDepMatrix(){
 	matrix::Matrix C = soctrl->getC();
 	int motors = C.getN();
 	int sensors = C.getM();
