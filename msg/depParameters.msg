@@ -8,6 +8,8 @@ float64 epsh
 float64 pretension
 float64 maxForce
 float64 springMult1
+float64 springMult2
+int32 diff
 int32 delay
 int32 guideType
 int32 guideIdx

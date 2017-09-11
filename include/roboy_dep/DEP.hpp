@@ -8,6 +8,7 @@
 #include <roboy_dep/command.h>
 #include <roboy_dep/depParameters.h>
 #include <roboy_dep/depMatrix.h>
+#include <chrono>
 
 #define NUMBER_OF_MOTORS  14
 //#define ENCODER_TO_RAD 2.0*3.14159/(2000.0*53.0)
@@ -25,7 +26,6 @@ class DEP {
 		int mode;
 	private:
 		void init_params();
-		void init();
 		void setMotorConfig();
 		void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 		void DepCommand(const roboy_dep::command::ConstPtr &msg);
@@ -52,6 +52,9 @@ class DEP {
 		double polyPar[NUMBER_OF_MOTORS][4];
 		int control_mode, outputPosMax, outputNegMax, spPosMax, spNegMax, IntegralPosMax, IntegralNegMax, Kp, Ki, Kd, forwardGain, deadBand;
 		int target_force, range;
+
+		bool motor_status_lock;
+		std::chrono::high_resolution_clock::time_point t_start, t_end;
 };
 
 #endif // _DEP

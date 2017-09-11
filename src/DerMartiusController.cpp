@@ -47,12 +47,14 @@ DerMartiusController::DerMartiusController(unsigned int number_mot,unsigned int 
   buffer_depth = 200;
   pretension = 5;
   maxForce   = 300;
-  springMult1 = 1;
+  springMult1 = 1.0;
+  springMult2 = 1.0;
   delay       = 50;
   guideType   = 0;
   guideIdx    = 0;
   guideAmpl   = 0.3;
   guideFreq   = 0.5;
+  diff = 1;
   learning = true;
 
   useDelay    = useDelaySensors;
@@ -166,7 +168,29 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
   // Put new sensor vector into ring buffer
 
   forces      = (force_values + (-pretension))*(1/maxForce);
-  x_raw_buffer[t] = sensor_values  + forces*springMult1;
+  x_raw_buffer[t] = sensor_values*springMult2  + forces*springMult1;
+  //x_raw_buffer[t] = sensor_values;
+  //x_raw_buffer[t] = forces*springMult1;
+
+  //DEBUG
+  /*
+  ROS_INFO("Sensor values:");
+  for (int i = 0; i < sensor_values.getN(); i++) {
+    std::string s;
+    for (int j = 0; j < sensor_values.getM(); j++) {
+      s.append(boost::lexical_cast<std::string>(sensor_values.val(i,j))+",");
+    }
+    ROS_INFO("%s", s.c_str());
+  }
+  ROS_INFO("Forces:");
+  for (int i = 0; i < forces.getN(); i++) {
+    std::string s;
+    for (int j = 0; j < forces.getM(); j++) {
+      s.append(boost::lexical_cast<std::string>(forces.val(i,j))+",");
+    }
+    ROS_INFO("%s", s.c_str());
+  }*/
+
 
   if(useDelay)
     xCurrent = x_raw_buffer[t].above(x_raw_buffer[t-delay]);
@@ -174,18 +198,15 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
     xCurrent = x_raw_buffer[t];
 
   x_buffer[t] = xCurrent; //input sensor values from robot
-
-  int diff = 1;
-
+  //ROS_INFO("%i", diff);
   if (t > timedist + diff)
     {
-      //        cout << "a.n " << M.getN() << "\n";
-      //        cout << "b.m: " << x_buffer[t].getM() << "\n";
-      Matrix mu = M * (x_buffer[t] - x_buffer[t-diff]);
-      Matrix v =  x_buffer[t - timedist] -  x_buffer[t - timedist - diff];//default: timedist = 2 - 16
-
       //toggle learning
       if (learning == true){
+          //        cout << "a.n " << M.getN() << "\n";
+          //        cout << "b.m: " << x_buffer[t].getM() << "\n";
+          Matrix mu = M * (x_buffer[t] - x_buffer[t-diff]);
+          Matrix v =  x_buffer[t - timedist] -  x_buffer[t - timedist - diff];//default: timedist = 2 - 16
           // Learning step:
 		      double reg = pow(10.0f,-regularization);
 

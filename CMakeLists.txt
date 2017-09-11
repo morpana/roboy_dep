@@ -26,7 +26,7 @@ find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communicat
 ## Declare ROS messages ##
 ##########################
 
-add_message_files(FILES command.msg depParameters.msg cArray.msg depMatrix.msg)
+add_message_files(FILES command.msg depParameters.msg cArray.msg depMatrix.msg transition.msg)
 generate_messages(DEPENDENCIES std_msgs)
 
 catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware common_utilities std_msgs message_runtime)
@@ -51,12 +51,12 @@ SET(SOURCES
 ##########
 
 add_executable(roboy_dep ${SOURCES})
-add_dependencies(roboy_dep roboy_communication_middleware_gencpp)
+add_dependencies(roboy_dep roboy_communication_middleware_gencpp roboy_dep_generate_messsages_cpp)
 target_link_libraries(roboy_dep roboy_managing_node)
 
-add_executable(dep_interface src/dep_interface.cpp)
-add_dependencies(dep_interface ${catkin_EXPORTED_TARGETS} roboy_dep roboy_dep_generate_messsages_cpp)
-target_link_libraries(dep_interface ${catkin_LIBRARIES})
+#add_executable(dep_interface src/dep_interface.cpp)
+#add_dependencies(dep_interface ${catkin_EXPORTED_TARGETS} roboy_dep roboy_dep_generate_messsages_cpp)
+#target_link_libraries(dep_interface ${catkin_LIBRARIES})
 
 ##############################################################################
 # Installation
@@ -67,10 +67,10 @@ install(TARGETS
 )
 
 
-install(TARGETS 
-        dep_interface
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+#install(TARGETS 
+#        dep_interface
+#        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+#)
 
 
 install(FILES

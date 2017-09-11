@@ -1,7 +1,5 @@
 #include <roboy_dep/DEP.hpp>
 
-#define UPDATE_RATE 20000	//20 ms
-
 int main(int argc, char **argv) {
 
 	//initialize myoMaster    
@@ -14,7 +12,9 @@ int main(int argc, char **argv) {
 	dep->myoMaster = &myoMaster;
 	
 	while(ros::ok()){
-		if (dep->mode == 1){
+		if (dep->mode == 0){
+			usleep(20000);
+		} else if (dep->mode == 1){
 			dep->force();
 			ROS_INFO("Force mode initialized");
 			dep->mode = 0;
@@ -26,9 +26,10 @@ int main(int argc, char **argv) {
 			ROS_INFO("Controller running");
 			dep->mode = 4;
 		} else if (dep->mode == 4){
-			dep->update();
+			//dep->update();
+			//update occurs in motorStatus subcsriber as this is updated at regular 20 ms interval
+			sleep(1);
 		}
-		usleep(UPDATE_RATE);
 	}
 	return 0;
 }

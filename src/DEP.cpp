@@ -23,6 +23,7 @@ DEP::DEP(){
 
 	// initialize controller
 	soctrl = new DerMartiusController(NUMBER_OF_MOTORS,NUMBER_OF_MOTORS,true);
+	init_params();
 }
 
 DEP::~DEP(){}
@@ -30,6 +31,8 @@ DEP::~DEP(){}
 void DEP::DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg){
 	ROS_INFO("Received matrix");
 	matrix::Matrix C = matrix::Matrix(msg->size, msg->depMatrix[0].size);
+	//DEBUG
+	//ROS_INFO("msg sizes -- motors: %i, sensors: %i", msg->size, msg->depMatrix[0].size);
 	// assign the data from the depMatrix
 	for (int i = 0; i < msg->size; i++) {
 		for (int j = 0; j < msg->depMatrix[i].size; j++) {
@@ -57,14 +60,17 @@ void DEP::init_params(){
 	range=5;
 
 	encoder_to_rad = 2.0*3.14159/(2000.0*53.0);
+
+	motor_status_lock = 1;
+	t_start = std::chrono::high_resolution_clock::now();
 }
 
 void DEP::force(){
+	init_params();
 	std::lock_guard<std::mutex> lock(myoMaster->mux);
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		myoMaster->changeSetPoint(i, target_force);
 	}
-	init_params();
 	control_mode = 2;
 	setMotorConfig();
 }
@@ -90,8 +96,48 @@ void DEP::initialize(){
 	setMotorConfig();
 }
 
+void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
+	if (mode == 4){
+		//DEBUG
+		/*t_end = std::chrono::high_resolution_clock::now();
+		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+		ROS_INFO("%i", diff);
+		t_start = std::chrono::high_resolution_clock::now();*/
+		//ROS_INFO("DEP received motor status");
+		// get positions and displacements
+		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+			positions.val(i,0) = msg->position[i];
+			//printMatrix(positions);
+			displacements.val(i,0) = msg->displacement[i];
+		}
+		//update();
+		//ROS_INFO("update");
+		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+			// convert encoder ticks to radians, and then scale them
+			positions.val(i,0) = scale_position(i, positions.val(i,0)*encoder_to_rad);
+			displacements.val(i,0) = scale_displacement(i, displacements.val(i,0));
+		}
+		motorRefs = soctrl->update(positions,displacements);
+		std::lock_guard<std::mutex> lock(myoMaster->mux);
+		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+			myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))/encoder_to_rad);
+		}
+		pubDepMatrix();
+	} else {
+
+	}
+}
+
+/*
 void DEP::update(){
-	ROS_INFO_THROTTLE(1,"update");
+	t_start = std::chrono::high_resolution_clock::now();
+	ROS_INFO("start");
+	motor_status_lock = 1;
+	while (motor_status_lock == 1){usleep(500);}
+	t_end = std::chrono::high_resolution_clock::now();
+	auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+	ROS_INFO("%i", diff);
+	ROS_INFO("update");
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
 		// convert encoder ticks to radians, and then scale them
 		positions.val(i,0) = scale_position(i, positions.val(i,0)*encoder_to_rad);
@@ -102,28 +148,42 @@ void DEP::update(){
 	//printMatrix(displacements);
 	motorRefs = soctrl->update(positions,displacements);
 	std::lock_guard<std::mutex> lock(myoMaster->mux);
-	matrix::Matrix m = matrix::Matrix(NUMBER_OF_MOTORS,1);
+	//matrix::Matrix m = matrix::Matrix(NUMBER_OF_MOTORS,1);
 	//matrix::Matrix m1 = matrix::Matrix(NUMBER_OF_MOTORS,1);
+	t_end = std::chrono::high_resolution_clock::now();
+	diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+	ROS_INFO("%i", diff);
+	ROS_INFO("set muscles");
 	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))*(1/encoder_to_rad));
+		myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))/encoder_to_rad);
 		//myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0)));
 		//myoMaster->changeSetPoint(i, 3000);
 		//if (i == 2){
 		//	myoMaster->changeSetPoint(1,(1/encoder_to_rad)*1);
 		//}
 		//m.val(i,0) = motorRefs.val(i,0);
-		m.val(i,0) = getMuscleLengthScaledInv(i, motorRefs.val(i,0))*(1/encoder_to_rad);
+		//m.val(i,0) = getMuscleLengthScaledInv(i, motorRefs.val(i,0))*(1/encoder_to_rad);
 	}
 	//ROS_INF0_THROTTLE(1, "motorRefs: ");
 	//printMatrix(m1);
-	//printMatrix(m);
+	//printMatrix(motorRefs);
 	pubDepMatrix();
-}
+	t_end = std::chrono::high_resolution_clock::now();
+	diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+	ROS_INFO("%i", diff);
+	while (diff < 20){ 
+		usleep(500);
+		t_end = std::chrono::high_resolution_clock::now();
+		diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+		ROS_INFO("%i", diff);
+	}
+	motor_status_lock = 1;
+}*/
 
 void DEP::pubDepMatrix(){
 	matrix::Matrix C = soctrl->getC();
-	int motors = C.getN();
-	int sensors = C.getM();
+	int motors = C.getM();
+	int sensors = C.getN();
 
 	roboy_dep::depMatrix msg;
 	msg.size = motors;
@@ -136,6 +196,10 @@ void DEP::pubDepMatrix(){
 		msg.depMatrix.push_back(msg_temp);
 	}
 	DepMatrix.publish(msg);
+	//DEBUG
+	//ROS_INFO("Published matrix");
+	//DEBUG
+	//ROS_INFO("msg sizes -- motors: %i, sensors: %i", msg.size, msg.depMatrix[0].size);
 	//printMatrix(C);
 }
 
@@ -146,16 +210,6 @@ void DEP::printMatrix(const matrix::Matrix& m){
 			s.append(boost::lexical_cast<std::string>(m.val(i,j))+",");
 		}
 		ROS_INFO("%s", s.c_str());
-	}
-}
-
-void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
-	ROS_INFO_THROTTLE(1,"DEP received motor status");
-	// get positions and displacements
-	for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-		positions.val(i,0) = msg->position[i];
-		//printMatrix(positions);
-		displacements.val(i,0) = msg->displacement[i];
 	}
 }
 
@@ -170,8 +224,6 @@ void DEP::DepCommand(const roboy_dep::command::ConstPtr &msg){
 		mode = 2;
 	} else if (msg->command.c_str() == update){
 		mode = 3;
-		Kp = 80;
-		setMotorConfig();
 	}
 }
 
@@ -208,6 +260,8 @@ void DEP::DepParameters(const roboy_dep::depParameters::ConstPtr &msg){
 	soctrl->pretension = msg->pretension;
 	soctrl->maxForce = msg->maxForce;
 	soctrl->springMult1 = msg->springMult1;
+	soctrl->springMult2 = msg->springMult2;
+	soctrl->diff = msg->diff;
 	soctrl->delay = msg->delay;
 	soctrl->guideType = msg->guideType;
 	soctrl->guideIdx = msg->guideIdx;
@@ -225,8 +279,8 @@ double DEP::scale_position(int motor_index, double value){
 }
 
 double DEP::scale_displacement(int motor_index, double value){
-	//return value;
-	return value*0.237536 + value*value*0.000032;
+	return 0.2375*value;
+	//return value*0.237536 + value*value*0.000032;
 	//return polyPar[motor_index][0] + value*polyPar[motor_index][1] + value*value*polyPar[motor_index][2] + value*value*value*polyPar[motor_index][3];
 	//soft spring
 	//remember relative encoders -> initialization procedure

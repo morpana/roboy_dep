@@ -57,8 +57,10 @@ public:
   double maxSpeed;
   double epsh;
   double springMult1;
+  double springMult2;
   double pretension;
   double maxForce;
+  int diff;
   int delay; // delay of delay sensors
   bool splitBrain; // each motor is independent
   double stepNo; // it is actually t, just as a double for exporting
