@@ -8,6 +8,8 @@
 #include <roboy_dep/command.h>
 #include <roboy_dep/depParameters.h>
 #include <roboy_dep/depMatrix.h>
+#include "roboy_dep/transition_start.h"
+
 #include <chrono>
 
 #define NUMBER_OF_MOTORS  14
@@ -41,7 +43,7 @@ class DEP {
 
 		ros::NodeHandlePtr nh;
 		ros::Subscriber motorStatus, depCommand, depParameters, depLoadMatrix;
-		ros::Publisher motorConfig, DepMatrix;
+		ros::Publisher motorConfig, DepMatrix, transition_start_pub;
 		boost::shared_ptr<ros::AsyncSpinner> spinner;
 
 		DerMartiusController* soctrl;

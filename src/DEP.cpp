@@ -13,8 +13,10 @@ DEP::DEP(){
 	depLoadMatrix = nh->subscribe("/roboy_dep/depLoadMatrix", 1, &DEP::DepLoadMatrix, this);
 	motorConfig = nh->advertise<roboy_communication_middleware::MotorConfig>("/roboy/middleware/MotorConfig", 1);
 	DepMatrix = nh->advertise<roboy_dep::depMatrix>("/roboy_dep/depMatrix", 1);
+	transition_start_pub = nh->advertise<roboy_dep::transition_start>("/roboy_dep/transition_start", 1);
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
 	spinner->start();
+
 
 	// initialize matrices
 	positions = matrix::Matrix(NUMBER_OF_MOTORS,1);
@@ -29,6 +31,12 @@ DEP::DEP(){
 DEP::~DEP(){}
 
 void DEP::DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg){
+	//there needs to be at least 1 second in between two consecutive depLoadMatrix messages to be considered a transition start
+	if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - t_start).count() > 1000){
+		roboy_dep::transition_start msg;
+		msg.start = true;
+		transition_start_pub.publish(msg);
+	}
 	ROS_INFO("Received matrix");
 	matrix::Matrix C = matrix::Matrix(msg->size, msg->depMatrix[0].size);
 	//DEBUG
@@ -40,6 +48,7 @@ void DEP::DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg){
 		}
 	}
 	soctrl->setC(C);
+	t_start = std::chrono::high_resolution_clock::now();
 }
 
 void DEP::init_params(){
