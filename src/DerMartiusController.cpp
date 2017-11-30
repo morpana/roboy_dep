@@ -50,6 +50,7 @@ DerMartiusController::DerMartiusController(unsigned int number_mot,unsigned int 
   springMult1 = 1.0;
   springMult2 = 1.0;
   delay       = 50;
+  amplitude = 1.0;
   guideType   = 0;
   guideIdx    = 0;
   guideAmpl   = 0.3;
@@ -104,6 +105,9 @@ DerMartiusController::DerMartiusController(unsigned int number_mot,unsigned int 
   addInspectableValue("step", &stepNo, "step number");
   t = 0;
   stepNo=0;
+
+  useFakeDelayedSensor = false;
+  fakeDelayedSensor = Matrix(number_motors,1);
 }
 
 void DerMartiusController::paramsToLogFile(){
@@ -193,7 +197,12 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
 
 
   if(useDelay)
-    xCurrent = x_raw_buffer[t].above(x_raw_buffer[t-delay]);
+    if(not useFakeDelayedSensor){
+      xCurrent = x_raw_buffer[t].above(x_raw_buffer[t-delay]);
+    } else {
+      xCurrent = x_raw_buffer[t].above(fakeDelayedSensor);
+      useFakeDelayedSensor = false;
+    }
   else
     xCurrent = x_raw_buffer[t];
 
@@ -235,7 +244,8 @@ Matrix DerMartiusController::update(const Matrix& sensor_values, const Matrix& f
 
       // Controller function
       // Matrix y =   (CC*x  + h).map(g);//Standard version. More recent:
-      Matrix y =  (CC*x_buffer[t]  + h ).map(DerMartiusController::g);//Controller outputs the rate of change of motor values //default: maxspeed = .5
+      //Matrix y =  (CC*x_buffer[t]  + h ).map(DerMartiusController::g);
+      Matrix y =  (CC*x_buffer[t] + h ).map(DerMartiusController::g)*amplitude;//Controller outputs the rate of change of motor values //default: maxspeed = .5
       //y = y.mapP(1.0,DerMartiusController::clip); //clipping of motor values
 
       //send y to buffer
@@ -332,4 +342,9 @@ matrix::Matrix DerMartiusController::getC(){
 
 void DerMartiusController::setC(matrix::Matrix C){
   CC = C;
+}
+
+void DerMartiusController::setDelayedSensor(matrix::Matrix delay_matrix){
+  useFakeDelayedSensor = true;
+  fakeDelayedSensor = delay_matrix;
 }

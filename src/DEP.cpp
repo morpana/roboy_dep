@@ -17,7 +17,6 @@ DEP::DEP(){
     spinner = boost::shared_ptr<ros::AsyncSpinner>(new ros::AsyncSpinner(5));
 	spinner->start();
 
-
 	// initialize matrices
 	positions = matrix::Matrix(NUMBER_OF_MOTORS,1);
 	displacements = matrix::Matrix(NUMBER_OF_MOTORS,1);
@@ -26,9 +25,34 @@ DEP::DEP(){
 	// initialize controller
 	soctrl = new DerMartiusController(NUMBER_OF_MOTORS,NUMBER_OF_MOTORS,true);
 	init_params();
+
+	sensorDelay = nh->subscribe("/roboy_dep/sensor_delay", 1, &DEP::loadSensorDelay, this);
+	sensor_delay = matrix::Matrix(100,NUMBER_OF_MOTORS);
+	sensor_delay_count = 0;
+
+	stop_sub = nh->subscribe("/roboy_dep/stop", 1, &DEP::stopCallback, this);
+	stop = false;
 }
 
 DEP::~DEP(){}
+
+void DEP::stopCallback(const roboy_dep::stop::ConstPtr &msg){
+	stop = msg->stop;
+}
+
+
+void DEP::loadSensorDelay(const roboy_dep::depMatrix::ConstPtr &msg){
+	//ROS_INFO("test");
+	//ROS_INFO("%i", msg->size);
+	sensor_delay = matrix::Matrix(msg->size, msg->depMatrix[0].size);
+	for (int i = 0; i < msg->size; i++) {
+		for (int j = 0; j < msg->depMatrix[i].size; j++) {
+			sensor_delay.val(msg->size-i,j) = msg->depMatrix[i].cArray[j];
+		}
+	}
+	sensor_delay_count = msg->size-1;
+	//printMatrix(sensor_delay);
+}
 
 void DEP::DepLoadMatrix(const roboy_dep::depMatrix::ConstPtr &msg){
 	//there needs to be at least 1 second in between two consecutive depLoadMatrix messages to be considered a transition start
@@ -62,7 +86,7 @@ void DEP::init_params(){
 	IntegralNegMax=-100;
 	Kp=80;
 	Ki=0;
-	Kd=0;
+	Kd=-1;
 	forwardGain=0;
 	deadBand=0;
 	target_force=20;
@@ -107,31 +131,43 @@ void DEP::initialize(){
 
 void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg){
 	if (mode == 4){
-		//DEBUG
-		/*t_end = std::chrono::high_resolution_clock::now();
-		auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
-		ROS_INFO("%i", diff);
-		t_start = std::chrono::high_resolution_clock::now();*/
-		//ROS_INFO("DEP received motor status");
-		// get positions and displacements
-		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-			positions.val(i,0) = msg->position[i];
-			//printMatrix(positions);
-			displacements.val(i,0) = msg->displacement[i];
+		if (not stop){
+			//DEBUG
+			/*t_end = std::chrono::high_resolution_clock::now();
+			auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+			ROS_INFO("%i", diff);
+			t_start = std::chrono::high_resolution_clock::now();*/
+			//ROS_INFO("DEP received motor status");
+			// get positions and displacements
+			for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+				positions.val(i,0) = msg->position[i];
+				//printMatrix(positions);
+				displacements.val(i,0) = msg->displacement[i];
+			}
+			//update();
+			//ROS_INFO("update");
+			for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+				// convert encoder ticks to radians, and then scale them
+				positions.val(i,0) = scale_position(i, positions.val(i,0)*encoder_to_rad);
+				displacements.val(i,0) = scale_displacement(i, displacements.val(i,0));
+			}
+			
+			if (sensor_delay_count > 0){
+				matrix::Matrix delays = matrix::Matrix(NUMBER_OF_MOTORS,1);
+				for (int i=0; i<NUMBER_OF_MOTORS; i++){	
+					delays.val(i,0) = sensor_delay.val(sensor_delay_count,i);
+				}
+				sensor_delay_count -= 1;
+				printMatrix(delays);
+				soctrl->setDelayedSensor(delays);
+			}
+			motorRefs = soctrl->update(positions,displacements);
+			std::lock_guard<std::mutex> lock(myoMaster->mux);
+			for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
+				myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))/encoder_to_rad);
+			}
+			pubDepMatrix();
 		}
-		//update();
-		//ROS_INFO("update");
-		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-			// convert encoder ticks to radians, and then scale them
-			positions.val(i,0) = scale_position(i, positions.val(i,0)*encoder_to_rad);
-			displacements.val(i,0) = scale_displacement(i, displacements.val(i,0));
-		}
-		motorRefs = soctrl->update(positions,displacements);
-		std::lock_guard<std::mutex> lock(myoMaster->mux);
-		for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
-			myoMaster->changeSetPoint(i, getMuscleLengthScaledInv(i, motorRefs.val(i,0))/encoder_to_rad);
-		}
-		pubDepMatrix();
 	} else {
 
 	}
@@ -271,6 +307,7 @@ void DEP::DepParameters(const roboy_dep::depParameters::ConstPtr &msg){
 	soctrl->springMult1 = msg->springMult1;
 	soctrl->springMult2 = msg->springMult2;
 	soctrl->diff = msg->diff;
+	soctrl->amplitude = msg->amplitude;
 	soctrl->delay = msg->delay;
 	soctrl->guideType = msg->guideType;
 	soctrl->guideIdx = msg->guideIdx;

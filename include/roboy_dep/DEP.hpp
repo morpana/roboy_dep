@@ -9,6 +9,7 @@
 #include <roboy_dep/depParameters.h>
 #include <roboy_dep/depMatrix.h>
 #include "roboy_dep/transition_start.h"
+#include "roboy_dep/stop.h"
 
 #include <chrono>
 
@@ -55,8 +56,20 @@ class DEP {
 		int control_mode, outputPosMax, outputNegMax, spPosMax, spNegMax, IntegralPosMax, IntegralNegMax, Kp, Ki, Kd, forwardGain, deadBand;
 		int target_force, range;
 
+
 		bool motor_status_lock;
 		std::chrono::high_resolution_clock::time_point t_start, t_end;
+
+		
+		//sensor delay idea variables
+		ros::Subscriber sensorDelay;
+		matrix::Matrix sensor_delay;
+		int sensor_delay_count;
+		void loadSensorDelay(const roboy_dep::depMatrix::ConstPtr &msg);
+
+		ros::Subscriber stop_sub;
+		void stopCallback(const roboy_dep::stop::ConstPtr &msg);
+		bool stop;
 };
 
 #endif // _DEP

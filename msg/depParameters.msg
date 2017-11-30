@@ -10,6 +10,7 @@ float64 maxForce
 float64 springMult1
 float64 springMult2
 int32 diff
+float64 amplitude
 int32 delay
 int32 guideType
 int32 guideIdx

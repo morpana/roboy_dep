@@ -61,6 +61,7 @@ public:
   double pretension;
   double maxForce;
   int diff;
+  float amplitude;
   int delay; // delay of delay sensors
   bool splitBrain; // each motor is independent
   double stepNo; // it is actually t, just as a double for exporting
@@ -90,6 +91,10 @@ public:
   bool restoreFromFile(const char* filename);
   matrix::Matrix getC();
   void setC(matrix::Matrix C);
+
+  bool useFakeDelayedSensor;
+  matrix::Matrix fakeDelayedSensor;
+  void setDelayedSensor(matrix::Matrix delay_matrix);
 };
 
 #endif
