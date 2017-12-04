@@ -155,7 +155,7 @@ void DEP::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPt
 			if (sensor_delay_count > 0){
 				matrix::Matrix delays = matrix::Matrix(NUMBER_OF_MOTORS,1);
 				for (int i=0; i<NUMBER_OF_MOTORS; i++){	
-					delays.val(i,0) = sensor_delay.val(sensor_delay_count,i);
+					delays.val(i,0) = scale_position(i,sensor_delay.val(sensor_delay_count,i)*encoder_to_rad);
 				}
 				sensor_delay_count -= 1;
 				printMatrix(delays);

@@ -1,1 +1,1 @@
-float32 brain_id
+int32 brain_id
