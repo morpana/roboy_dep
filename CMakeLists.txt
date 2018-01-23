@@ -20,7 +20,7 @@ include_directories(
 ##############################################################################
 
 
-find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communication_middleware cv_bridge tf tf_conversions roboy_managing_node common_utilities interactive_markers std_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS roscpp roboy_communication_middleware roboy_managing_node std_msgs message_generation)
 
 ##########################
 ## Declare ROS messages ##
@@ -29,7 +29,7 @@ find_package(catkin REQUIRED COMPONENTS qt_build roscpp pcl_ros roboy_communicat
 add_message_files(FILES command.msg depParameters.msg cArray.msg depMatrix.msg transition.msg transition_start.msg linear_combination.msg brain_id.msg stop.msg trigger_ref.msg transition_direction.msg start_script.msg)
 generate_messages(DEPENDENCIES std_msgs)
 
-catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware common_utilities std_msgs message_runtime)
+catkin_package(CATKIN_DEPENDS roboy_managing_node roboy_communication_middleware std_msgs message_runtime)
 
 include_directories(${catkin_INCLUDE_DIRS} ../common_utilities/include)
 
